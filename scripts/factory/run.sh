@@ -30,8 +30,17 @@ export DEFAULT_BRANCH="${DEFAULT_BRANCH:-main}"
 
 log() { printf '%s | %s\n' "$(date -u +%FT%TZ)" "$*"; }
 
-if ! mkdir "$LOCK" 2>/dev/null; then log "another loop holds the lock — exiting."; exit 0; fi
-trap 'rmdir "$LOCK" 2>/dev/null || true' EXIT INT TERM
+# PID-aware single-instance lock: self-heals an orphaned lock (dead/missing holder PID)
+# instead of stranding forever when a loop dies via SIGKILL/crash/reboot (trap skipped).
+acquire_lock() {
+  if mkdir "$LOCK" 2>/dev/null; then echo $$ > "$LOCK/pid"; return 0; fi
+  local pid; pid="$(cat "$LOCK/pid" 2>/dev/null || true)"
+  if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then return 1; fi  # live holder
+  log "reclaiming stale lock (holder pid=${pid:-none} not alive)"; rm -rf "$LOCK"
+  mkdir "$LOCK" 2>/dev/null && { echo $$ > "$LOCK/pid"; return 0; } || return 1
+}
+if ! acquire_lock; then log "another live loop holds the lock — exiting."; exit 0; fi
+trap 'rm -rf "$LOCK" 2>/dev/null || true' EXIT INT TERM
 command -v claude >/dev/null || { log "FATAL: claude not on PATH"; exit 1; }
 command -v gh    >/dev/null || { log "FATAL: gh not on PATH";     exit 1; }
 [ -f "$STATE" ] || printf '# Auto-Agent consensus state\n\n(no cycles yet)\n' > "$STATE"
