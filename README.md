@@ -108,6 +108,34 @@ picked up next cycle, no restart). `touch scripts/factory/STOP` to stop graceful
 
 ---
 
+## Slack assistant (optional)
+
+The engineering loop is fully autonomous. The **Slack assistant is the opposite** — it never
+acts without you. Enable it and a separate listener watches for Slack messages that
+@-mention you, drafts a reply **in your voice** (grounded in `scripts/factory/knowledge.md`),
+and routes the draft to your **review DM**. It posts to a channel **only after you approve
+that specific message** — and posts under **your own name**.
+
+> **Use it only if your team knows you use an assistant.** It replies as you, so the one
+> non-negotiable is that nobody is deceived into thinking an automated draft is a human you.
+> Disclose once; then approve-per-message keeps every send genuinely yours.
+
+**Safety model (different from the factory's CI gate):**
+- **Always ask** — there is no auto-send mode. Each draft needs your explicit `send`/`edit` in the review DM. Silence = not sent.
+- **Kill switch** — `touch scripts/factory/SLACK_OFF` pauses it instantly (separate process, so the engineering loop is untouched); `rm` to resume. `STOP` halts everything.
+- **Self-token** — sends use a Slack **user token** (`xoxp-`) in the gitignored `.env.local`; treat it like a password.
+
+**Enable it:**
+1. Create a Slack app → **OAuth & Permissions** → add the User Token Scopes listed in `.env.local.example` → install to your workspace → copy the **User OAuth Token**.
+2. Put it in `scripts/factory/.env.local` as `SLACK_USER_TOKEN=…`.
+3. In `factory.config`: set `SLACK_ENABLED="true"`, `SLACK_REVIEW_DM` (your DM/channel id), and `SLACK_CHANNELS` (channels to watch).
+4. Fill in `scripts/factory/knowledge.md` (your role, the org, key people, your voice).
+5. Run the listener: `bash scripts/factory/slack-run.sh` (or a launchd/systemd unit, like the engineering loop).
+
+`slack.py whoami` verifies your token before you turn it on.
+
+---
+
 ## How it's built
 
 | Piece | What |

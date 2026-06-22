@@ -34,3 +34,15 @@ BRANCH_PREFIX="auto-agent"
 FACTORY_INSTANCE=""              # blank = auto (host-based). Set distinct ids if running several.
 FACTORY_IDLE_SEC="900"           # sleep when the backlog is dry
 FACTORY_BREAKER_N="3"            # consecutive non-progress cycles before a 1h backoff
+
+# ── Slack assistant (OPTIONAL — off by default) ─────────────────────────────
+# A separate listener (scripts/factory/slack-run.sh) that drafts replies to Slack messages
+# which @-mention you and routes them to your review DM. It NEVER sends to anyone until you
+# approve each draft — every send is under your own name. Run it ONLY if your team knows you
+# use an assistant. Tokens go in scripts/factory/.env.local, never here.
+SLACK_ENABLED="false"            # the on/off switch. true = the listener runs.
+SLACK_CHANNELS=""                # comma-separated channel IDs to watch for @-mentions of you
+SLACK_REVIEW_DM=""               # channel/DM ID where drafts go for your approval (e.g. your own DM)
+SLACK_SELF_ID=""                 # optional: your Slack user ID (auto-resolved via auth.test if blank)
+SLACK_POLL_SEC="45"              # how often the listener polls Slack
+# Pause without editing config: `touch scripts/factory/SLACK_OFF` (rm to resume).
