@@ -8,6 +8,9 @@ scripts/factory/factory.log.prev
 scripts/factory/.lock/
 scripts/factory/STOP
 scripts/factory/state.md
+scripts/factory/slack.log
+scripts/factory/.slack-state.json
+scripts/factory/SLACK_OFF
 
 # OS / editor
 .DS_Store
