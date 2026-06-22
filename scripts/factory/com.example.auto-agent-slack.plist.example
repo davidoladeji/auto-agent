@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  launchd service for the Auto-Agent Slack assistant listener (macOS). Replace
+  /ABSOLUTE/PATH/TO/REPO with your project's absolute path, then:
+    cp com.example.auto-agent-slack.plist.example ~/Library/LaunchAgents/com.example.auto-agent-slack.plist
+    launchctl load -w ~/Library/LaunchAgents/com.example.auto-agent-slack.plist
+  Stop: launchctl unload -w ~/Library/LaunchAgents/com.example.auto-agent-slack.plist
+
+  Separate from com.example.auto-agent.plist so you can stop the Slack listener
+  without touching the engineering loop.
+  Wrapped in `caffeinate -is` so the Mac can't sleep (sleep suspends launchd → the loop
+  stalls). KeepAlive restarts it if it ever exits. Throttled to one restart / 60s.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.example.auto-agent-slack</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/caffeinate</string>
+    <string>-is</string>
+    <string>/bin/bash</string>
+    <string>/ABSOLUTE/PATH/TO/REPO/scripts/factory/slack-run.sh</string>
+  </array>
+  <key>WorkingDirectory</key><string>/ABSOLUTE/PATH/TO/REPO</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>60</integer>
+  <key>StandardOutPath</key><string>/ABSOLUTE/PATH/TO/REPO/scripts/factory/slack.log</string>
+  <key>StandardErrorPath</key><string>/ABSOLUTE/PATH/TO/REPO/scripts/factory/slack.log</string>
+</dict>
+</plist>
