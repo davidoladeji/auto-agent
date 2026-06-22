@@ -1,0 +1,25 @@
+# systemd service for the Auto-Agent Slack assistant listener (Linux server).
+# Replace USER and /ABSOLUTE/PATH/TO/REPO, then:
+#   sudo cp auto-agent-slack.service.example /etc/systemd/system/auto-agent-slack.service
+#   sudo systemctl daemon-reload && sudo systemctl enable --now auto-agent-slack
+#   logs: journalctl -u auto-agent-slack -f      stop: sudo systemctl stop auto-agent-slack
+#
+# Separate from auto-agent.service so you can stop the Slack listener without
+# touching the engineering loop.
+[Unit]
+Description=Auto-Agent Slack assistant listener
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=USER
+WorkingDirectory=/ABSOLUTE/PATH/TO/REPO
+# Ensure node/gh/claude/python3 are on PATH for the service environment.
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+ExecStart=/bin/bash /ABSOLUTE/PATH/TO/REPO/scripts/factory/slack-run.sh
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target
