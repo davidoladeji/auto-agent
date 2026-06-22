@@ -1,0 +1,29 @@
+# Example CI — the GATE the factory cannot bypass. ADAPT to your stack, then:
+#   1. The job `name:` below must match `CI_CHECK_NAME` in factory.config.
+#   2. Make this check REQUIRED in branch protection (Settings → Branches) on your default
+#      branch, with force-push + deletion disabled. That is the autonomy safety net.
+#
+# This sample is a Node/TypeScript project. Swap the steps for your language (go test,
+# cargo test, pytest, etc.). Add service containers (e.g. Postgres) if your build needs them.
+
+name: CI                       # ← keep in sync with CI_CHECK_NAME
+on:
+  pull_request:
+  push:
+    branches: [main]           # ← your DEFAULT_BRANCH
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  ci:
+    name: CI                   # ← this is the required-check name; match CI_CHECK_NAME
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npx next build      # drop/replace if your build differs or needs a DB

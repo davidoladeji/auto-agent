@@ -1,0 +1,36 @@
+# Auto-Agent configuration — copy to `factory.config` and fill in.
+# Everything project-specific lives here; the agents/skills read these values, so the
+# factory itself stays generic. `factory.config` is gitignored (it can name private
+# projects); commit only this `.example`.
+
+# ── Project ────────────────────────────────────────────────────────────────
+PROJECT_NAME="My App"            # human name, used in messages
+REPO="owner/repo"                # GitHub owner/repo (or leave blank to auto-detect from origin)
+DEFAULT_BRANCH="main"            # the branch you merge to → deploy
+PROD_URL=""                      # optional: prod URL the prod-verifier eyeballs (e.g. https://app.example.com)
+
+# ── Issue tracker (Linear) ──────────────────────────────────────────────────
+# v1 supports Linear. IDs are resolved from these NAMES at runtime via the Linear API,
+# so you only set human-readable names. (Tracker-agnostic is a documented extension point.)
+TRACKER="linear"
+LINEAR_TEAM="My Team"            # Linear team name
+LINEAR_PROJECT=""                # optional: restrict to one project; blank = whole team
+
+# ── The gate (what must pass before a merge) ────────────────────────────────
+# The REQUIRED GitHub check name on your protected branch — auto-merge only fires on this.
+CI_CHECK_NAME="CI"
+# Local gate commands run before opening a PR. Adjust to your stack (Go, Rust, Python…).
+# Leave any blank to skip it. CI is the authoritative gate; these catch issues early.
+GATE_LINT="npm run lint"
+GATE_TYPECHECK="npm run typecheck"
+GATE_TEST="npm test"
+GATE_BUILD=""                    # optional + often heavy; CI usually covers the build
+
+# ── Branching ───────────────────────────────────────────────────────────────
+# Local/self-merge instances use this prefix; cloud routines must use `claude/*`.
+BRANCH_PREFIX="auto-agent"
+
+# ── Autonomy knobs ──────────────────────────────────────────────────────────
+FACTORY_INSTANCE=""              # blank = auto (host-based). Set distinct ids if running several.
+FACTORY_IDLE_SEC="900"           # sleep when the backlog is dry
+FACTORY_BREAKER_N="3"            # consecutive non-progress cycles before a 1h backoff

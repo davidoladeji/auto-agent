@@ -1,0 +1,15 @@
+# Per-install config + secrets (created from the .example templates; never committed)
+factory.config
+scripts/factory/.env.local
+
+# Runtime artifacts
+scripts/factory/factory.log
+scripts/factory/factory.log.prev
+scripts/factory/.lock/
+scripts/factory/STOP
+scripts/factory/state.md
+
+# OS / editor
+.DS_Store
+__pycache__/
+*.pyc

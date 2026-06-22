@@ -1,0 +1,22 @@
+# systemd service for the Auto-Agent 24/7 driver (Linux server).
+# Replace USER and /ABSOLUTE/PATH/TO/REPO, then:
+#   sudo cp auto-agent.service.example /etc/systemd/system/auto-agent.service
+#   sudo systemctl daemon-reload && sudo systemctl enable --now auto-agent
+#   logs: journalctl -u auto-agent -f      stop: sudo systemctl stop auto-agent
+[Unit]
+Description=Auto-Agent autonomous engineering factory
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=USER
+WorkingDirectory=/ABSOLUTE/PATH/TO/REPO
+# Ensure node/gh/claude are on PATH for the service environment.
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+ExecStart=/bin/bash /ABSOLUTE/PATH/TO/REPO/scripts/factory/run.sh
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target
