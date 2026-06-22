@@ -1,0 +1,41 @@
+# CI — the GATE the factory cannot bypass (see README "Why it's safe to run unattended").
+# Make this check REQUIRED in branch protection on `main` (force-push + deletion disabled);
+# that is the autonomy safety net. The job `name:` ("CI") must match CI_CHECK_NAME in
+# factory.config.
+#
+# Auto-Agent is stdlib Python + bash (no package manager), so the gate is a syntax gate:
+# every .py must byte-compile and every .sh must parse. shellcheck runs as advisory signal.
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Python compiles (syntax gate)
+        run: |
+          files="$(git ls-files '*.py')"
+          if [ -n "$files" ]; then python -m py_compile $files; fi
+      - name: Shell scripts parse (syntax gate)
+        run: |
+          fail=0
+          for f in $(git ls-files '*.sh'); do
+            bash -n "$f" || { echo "::error file=$f::bash -n failed"; fail=1; }
+          done
+          exit $fail
+      - name: shellcheck (advisory)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y shellcheck >/dev/null
+          # Advisory only — surfaces issues without gating, so the syntax gate above is the
+          # authoritative bar. Tighten to a hard fail once the scripts are shellcheck-clean.
+          shellcheck $(git ls-files '*.sh') || true
