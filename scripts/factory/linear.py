@@ -15,7 +15,7 @@ Usage:
   linear.py label ABC-123 add|remove factory-building
   linear.py subissue --parent ABC-123 --title "…" --desc "…" --labels Performance,from-factory
 """
-import argparse, json, os, re, sys, urllib.request
+import argparse, json, os, re, ssl, sys, urllib.request
 
 API = "https://api.linear.app/graphql"
 SKIP = {"factory-skip", "factory-blocked"}
@@ -28,11 +28,18 @@ def key() -> str:
     return k
 
 
+def _ssl_ctx() -> ssl.SSLContext:
+    ctx = ssl.create_default_context()
+    ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+    return ctx
+
+
 def gql(query: str, variables: dict | None = None) -> dict:
     body = json.dumps({"query": query, "variables": variables or {}}).encode()
     req = urllib.request.Request(API, data=body,
         headers={"Content-Type": "application/json", "Authorization": key()})
-    with urllib.request.urlopen(req, timeout=30) as r:
+    opener = urllib.request.build_opener(urllib.request.HTTPSHandler(context=_ssl_ctx()))
+    with opener.open(req, timeout=30) as r:
         out = json.loads(r.read())
     if out.get("errors"):
         sys.exit("Linear API error: " + json.dumps(out["errors"]))
